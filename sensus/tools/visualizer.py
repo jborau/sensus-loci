@@ -5,6 +5,11 @@ import open3d as o3d
 from open3d.web_visualizer import draw
 import cv2
 import numpy as np
+from mmengine.config import Config
+import os.path as osp
+from mmdet3d.utils import register_all_modules
+from mmdet3d.datasets import *
+
 
 from data_processor import DataProcessor
 
@@ -250,9 +255,18 @@ class ImageVisualizer:
 
     def load_calib(self, calib_path):
         self.calib = DataProcessor(None, calib_path).process_calib_file()
+        print(self.calib['P2'])
 
     def load_results(self, results):
         self.results = results.pred_instances_3d
+
+    def load_calib_from_cam_to_img(self, cam_to_img):
+        # Flatten the tensor and remove the last four zeros
+        flattened = [item for sublist in cam_to_img for item in sublist][:-4]
+
+        # Convert to desired dictionary format
+        self.calib = {'P2': list(flattened)}
+        print(self.calib['P2'])
 
     def project_3d_to_2d(self, points_3d, P):
         points_3d_ext = np.hstack((points_3d, np.ones((points_3d.shape[0], 1))))
@@ -261,7 +275,6 @@ class ImageVisualizer:
         return points_2d
 
     def draw_3d_box(self, dimensions, location, rotation, pitch, thickness=2):
-        print(dimensions)
         # Get dimensions, location and rotation_y from label
         h, w, l = dimensions
         x, y, z = location
@@ -321,6 +334,10 @@ class ImageVisualizer:
                 location = label['location']
                 rotation = label['rotation_y']
 
+                print(dimensions)
+                print(location)
+                print(rotation)
+
                 # intrinsic_matrix = np.array(self.calib['P2']).reshape(3, 4)
                 # intrinsic_matrix = intrinsic_matrix[:3, :3]
 
@@ -351,6 +368,29 @@ class ImageVisualizer:
         
         cv2.imwrite('result_sensus.png', self.image)
 
+    def draw_monodetectionlabels_from_config(self, pitch, gt_boxes_3d, thickness=1):
+        cars = 0
+        for bbox in gt_boxes_3d:
+            dimensions = bbox[4], bbox[5], bbox[3]
+            location = bbox[0:3]
+            rotation = bbox[6]
+
+            dimensions = list(dimensions)
+            location = list(location)
+            dimensions = [t.item() for t in dimensions]
+            location = [t.item() for t in location]
+            rotation = rotation.item()
+
+            print(dimensions)
+            print(location)
+            print(rotation)
+
+            # Draw the 3D bounding box
+            self.draw_3d_box(dimensions, location, rotation, pitch, thickness)
+            cars += 1
+        
+        cv2.imwrite('viz_img_cfg.png', self.image)
+
 def draw_lidar_labels(pcd_file, calib, labels, img_path, num_cars):
     viz = LidarVisualizer(pcd_file, img_path)
     viz.load_calib(calib)
@@ -366,6 +406,7 @@ def draw_monodetection_labels(img_file, calib, labels, num_cars, pitch, thicknes
     viz = ImageVisualizer(img_file)
     viz.load_calib(calib)
     viz.load_labels(labels)
+    # print(viz.labels)
     viz.draw_monodetection_labels(num_cars, pitch, thickness=thickness)
 
 def draw_monodetection_results(img_file, calib, results, score, pitch, thickness=2):
@@ -396,3 +437,40 @@ def draw_monorestults_in_lidar(bin_path, calib, results, img_path, labels):
     viz.load_calib(calib)
     viz.load_labels(labels)
     viz.draw_cars_from_monodet_result(results_adapted)
+
+def proccess_config(config_file, mono=True, Lidar=True):
+    cfg = Config.fromfile(config_file)
+    if mono==True and cfg['input_modality']['use_camera']==False:
+        raise ValueError("Error: config file is not set to use camera images")
+    if Lidar==True and cfg['input_modality']['use_lidar']==False:
+        raise ValueError("Error: config file is not set to use lidar data")
+    
+    register_all_modules()
+
+    train_data_cfg = cfg['train_dataloader']['dataset']
+
+    # Obtain dataset type and then delete the "type" field from the config
+    dataset_type = train_data_cfg.pop("type")
+
+    DatasetClass = globals()[dataset_type]
+    train_dataset = DatasetClass(**train_data_cfg)
+
+    return train_dataset 
+
+def draw_monolabels_from_config(config_path, sample_id):
+    train_dataset = proccess_config(config_path, mono=True, Lidar=False)
+    
+    sample = train_dataset[sample_id]
+    img_path = sample['data_samples'].img_path
+    cam_to_img = sample['data_samples'].cam2img
+    gt_boxes_3d = sample['data_samples'].gt_instances_3d.bboxes_3d.tensor
+
+    print(img_path)
+
+    viz = ImageVisualizer(img_path)
+    viz.load_calib_from_cam_to_img(cam_to_img)
+
+    viz.draw_monodetectionlabels_from_config(pitch=0.2031, gt_boxes_3d=gt_boxes_3d)
+
+    print(viz.calib)
+
