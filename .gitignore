@@ -3,6 +3,7 @@ work_dirs/
 *.pth
 *.png
 *.jpg
+*.mp4
 *.pkl
 *.pickle
 

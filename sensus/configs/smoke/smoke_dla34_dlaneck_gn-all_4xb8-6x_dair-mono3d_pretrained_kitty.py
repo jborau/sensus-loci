@@ -1,5 +1,5 @@
 _base_ = [
-    '../_base_/datasets/dair-mono3d.py', '_base_/models/monocon_dla34-tmp.py',
+    '../_base_/datasets/dair-mono3d.py', '../_base_/models/smoke.py',
     '../_base_/default_runtime.py'
 ]
 
@@ -41,7 +41,7 @@ val_dataloader = dict(dataset=dict(pipeline=test_pipeline))
 # training schedule for 6x
 max_epochs = 100
 train_cfg = dict(
-    type='EpochBasedTrainLoop', max_epochs=max_epochs, val_interval=1)
+    type='EpochBasedTrainLoop', max_epochs=max_epochs, val_interval=5)
 val_cfg = dict(type='ValLoop')
 test_cfg = dict(type='TestLoop')
 
@@ -59,8 +59,9 @@ param_scheduler = [
 # optimizer
 optim_wrapper = dict(
     type='OptimWrapper',
-    optimizer=dict(type='Adam', lr=2.5e-5),
+    optimizer=dict(type='Adam', lr=2.5e-4),
     clip_grad=None)
 
-
 find_unused_parameters = True
+
+load_from = '/home/javier/sensus-loci/work_dirs/smoke_dla34_dlaneck_gn-all_4xb8-6x_kitti-mono3d/epoch_100.pth'

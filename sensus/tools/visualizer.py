@@ -13,11 +13,15 @@ import numpy as np
 from mmengine.config import Config
 import os.path as osp
 from mmdet3d.utils import register_all_modules
-from mmdet3d.datasets import *
+# from mmdet3d.datasets import *
+from mmdet3d.datasets import CBGSDataset, Det3DDataset, KittiDataset, LyftDataset, NuScenesDataset,\
+    S3DISDataset, S3DISSegDataset, ScanNetDataset, ScanNetInstanceSegDataset, ScanNetSegDataset, \
+    Seg3DDataset, SemanticKittiDataset, SUNRGBDDataset
 
-from .data_processor import DataProcessor
+from data_processor import DataProcessor
 
-__all__ = ['ImageVisualizer', 'draw_monodetection_labels', 'draw_monodetection_results']
+__all__ = ['ImageVisualizer', 'draw_monodetection_labels', 'draw_monodetection_results', 'draw_lidar_labels']
+# from open3d.web_visualizer import draw
 
 class LidarVisualizer:
     def __init__(self, bin_path, img_path):
@@ -253,8 +257,8 @@ class LidarVisualizer:
 
 
 class ImageVisualizer:
-    def __init__(self, img_path):
-        self.image = cv2.imread(img_path)
+    def __init__(self, img_path=None):
+        self.image = cv2.imread(img_path) if img_path is not None else None
 
     def load_labels(self, labels_path):
         self.labels = DataProcessor(labels_path, None).process_label_file()
@@ -355,7 +359,7 @@ class ImageVisualizer:
         
         cv2.imwrite('viz_img.png', self.image)
 
-    def draw_monodetection_results(self, score, pitch, thickness=2):
+    def draw_monodetection_results(self, score, pitch, thickness=2, name='result_sensus.png'):
         for bbox in self.results:
             if bbox.scores_3d[0] > score:
                 bbox = bbox.bboxes_3d.tensor[0].cpu().tolist()
@@ -371,9 +375,9 @@ class ImageVisualizer:
                 image = self.draw_3d_box(bbox_dim, bbox_location, bbox_rotation, pitch=pitch, thickness=thickness)
             else:
                 break
-        
-        cv2.imwrite('result_sensus.png', self.image)
 
+        return self.image
+        
     def draw_monodetectionlabels_from_config(self, pitch, gt_boxes_3d, thickness=1):
         cars = 0
         for bbox in gt_boxes_3d:
@@ -419,7 +423,9 @@ def draw_monodetection_results(img_file, calib, results, score, pitch, thickness
     viz = ImageVisualizer(img_file)
     viz.load_calib(calib)
     viz.load_results(results)
-    viz.draw_monodetection_results(score, pitch, thickness=thickness)
+    img = viz.draw_monodetection_results(score, pitch, thickness=thickness)
+    cv2.imwrite('sensus_result', img)
+
 
 def adapt_monodetresult_to_label(result):
     result_adapted = {
