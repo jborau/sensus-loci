@@ -101,4 +101,4 @@ train_dataloader = dict(
 test_dataloader = dict(dataset=dict(pipeline=test_pipeline, metainfo=metainfo))
 val_dataloader = dict(dataset=dict(pipeline=test_pipeline, metainfo=metainfo))
 ##########################################################################################
-train_cfg = dict(val_interval=1)
+train_cfg = dict(val_interval=15)

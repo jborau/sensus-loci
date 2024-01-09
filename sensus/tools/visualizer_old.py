@@ -2,9 +2,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import open3d as o3d
-
-from open3d.web_visualizer import draw
-
+# import only if from a jupyter notebook
+try:
+    _ = get_ipython().__class__.__name__
+    from open3d.web_visualizer import draw
+except:
+    print('Environment is not a jupyter notebook: open3d.web_visualizer is not imported')
 import cv2
 import numpy as np
 from mmengine.config import Config
@@ -15,7 +18,7 @@ from mmdet3d.datasets import CBGSDataset, Det3DDataset, KittiDataset, LyftDatase
     S3DISDataset, S3DISSegDataset, ScanNetDataset, ScanNetInstanceSegDataset, ScanNetSegDataset, \
     Seg3DDataset, SemanticKittiDataset, SUNRGBDDataset
 
-from .data_processor_old import DataProcessor
+from .data_processor import DataProcessor
 
 __all__ = ['ImageVisualizer', 'draw_monodetection_labels', 'draw_monodetection_results', 'draw_lidar_labels', 'process_config']
 # from open3d.web_visualizer import draw
@@ -402,7 +405,6 @@ def draw_lidar_labels(pcd_file, calib, labels, img_path, num_cars):
     viz.load_calib(calib)
     viz.load_labels(labels)
     viz.draw_cars_from_labels(num_cars)
-    return viz.labels
 
 def draw_lidar_results(pcd_file, calib, results, num_cars):
     viz = LidarVisualizer(pcd_file, None)

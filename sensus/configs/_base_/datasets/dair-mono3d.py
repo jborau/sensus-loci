@@ -1,6 +1,7 @@
 dataset_type = 'KittiDataset'
 data_root = '/home/javier/datasets/DAIR/single-infrastructure-side-mmdet/'
-class_names = ['Pedestrian', 'Cyclist', 'Car']
+# class_names = ['Pedestrian', 'Cyclist', 'Car']
+class_names = ['Car']
 input_modality = dict(use_lidar=False, use_camera=True)
 metainfo = dict(classes=class_names)
 

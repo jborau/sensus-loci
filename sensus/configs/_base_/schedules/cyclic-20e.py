@@ -17,18 +17,18 @@ param_scheduler = [
     # lr * 1e-4
     dict(
         type='CosineAnnealingLR',
-        T_max=16,
+        T_max=20,
         eta_min=lr * 10,
         begin=0,
-        end=16,
+        end=20,
         by_epoch=True,
         convert_to_iter_based=True),
     dict(
         type='CosineAnnealingLR',
-        T_max=24,
+        T_max=40,
         eta_min=lr * 1e-4,
-        begin=16,
-        end=40,
+        begin=20,
+        end=60,
         by_epoch=True,
         convert_to_iter_based=True),
     # momentum scheduler
@@ -36,18 +36,18 @@ param_scheduler = [
     # during the next 24 epochs, momentum increases from 0.85 / 0.95 to 1
     dict(
         type='CosineAnnealingMomentum',
-        T_max=16,
+        T_max=20,
         eta_min=0.85 / 0.95,
         begin=0,
-        end=16,
+        end=20,
         by_epoch=True,
         convert_to_iter_based=True),
     dict(
         type='CosineAnnealingMomentum',
-        T_max=24,
+        T_max=40,
         eta_min=1,
-        begin=16,
-        end=40,
+        begin=20,
+        end=60,
         by_epoch=True,
         convert_to_iter_based=True)
 ]
@@ -56,7 +56,7 @@ param_scheduler = [
 # Although the max_epochs is 40, this schedule is usually used we
 # RepeatDataset with repeat ratio N, thus the actual max epoch
 # number could be Nx40
-train_cfg = dict(by_epoch=True, max_epochs=40, val_interval=1)
+train_cfg = dict(by_epoch=True, max_epochs=60, val_interval=15)
 val_cfg = dict()
 test_cfg = dict()
 
