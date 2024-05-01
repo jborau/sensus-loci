@@ -99,9 +99,16 @@ class ImageVisualizer:
             [0, np.sin(pitch), np.cos(pitch)]
         ])
 
+        # Rz = np.array([
+        # [np.cos(roll), -np.sin(roll), 0],
+        # [np.sin(roll), np.cos(roll), 0],
+        # [0, 0, 1]
+        # ])
+
         # Apply rotations    
         vertices = np.dot(Ry, vertices)
         vertices = np.dot(Rx, vertices)
+        # vertices = np.dot(Rz, vertices)
 
 
         # Translate vertices to world coordinate
@@ -154,7 +161,7 @@ class ImageVisualizer:
         return points_2d
     
     def draw_monodetection_labels(self, num_cars, thickness, out_dir):
-        cars = 0
+        cars = 1
         pitch = self.get_pitch(self.calib['Tr_velo_to_cam'])
         for bbox in self.bboxes:
             if bbox.type == 'Car':
@@ -166,14 +173,14 @@ class ImageVisualizer:
 
         cv2.imwrite(out_dir + '.png', self.image)
 
-    def draw_monodetection_results(self, score, thickness, out_dir):
+    def draw_monodetection_results(self, score, thickness, out_dir, index_car, pitch=0.0, roll = 0.0):
         pitch = self.get_pitch(self.calib['Tr_velo_to_cam'])
-
         for bbox in self.bboxes:
-            # if bbox.score >= score:
-            self.draw_3d_box(bbox, pitch, thickness)
+            if bbox.score >= score and bbox.type == index_car:
+                self.draw_3d_box(bbox, pitch, thickness)
 
         cv2.imwrite(out_dir + '.png', self.image)
+        return self.image
 
 
 def draw_monodetection_labels(img_file, calib_path, labels_path, num_cars, thickness=2, out_path = 'viz_img'):
@@ -185,13 +192,13 @@ def draw_monodetection_labels(img_file, calib_path, labels_path, num_cars, thick
     viz.draw_monodetection_labels(num_cars = num_cars, thickness = thickness, out_dir=out_path)
 
 
-def draw_monodetection_results(img_file, calib_path, results, score=0.25, thickness=2, out_path = 'viz_img'):
+def draw_monodetection_results(img_file, calib_path, results, score=0.25, thickness=2, out_path = 'viz_img', index_car = 0):
     data = SensusInstance()
     data.load_image_from_path(img_file)
     data.load_calib(calib_path)
     data.load_bboxes_from_result(results, cam_bbox=True, lidar_bbox=False)    
     viz = ImageVisualizer(data.image, data.calib, data.camera_bboxes)
-    viz.draw_monodetection_results(score = score, thickness = thickness, out_dir=out_path)
+    viz.draw_monodetection_results(score = score, thickness = thickness, out_dir=out_path, index_car = index_car)
 
 def draw_lidar_labels(lidar_path, calib_path, labels_path, num_cars=10):
     data = SensusInstance()

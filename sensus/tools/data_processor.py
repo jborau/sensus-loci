@@ -76,7 +76,7 @@ class CameraBbox:
             self.score = score
 
     def __str__(self):
-        return f"CameraBbox Type: {self.type}, Location: {self.location}, \n Dimensions: {self.dimensions}, Rotation Y: {self.rotation_y}, Score: {getattr(self, 'score', 'Not available')})"
+        return f"CameraBbox Type: {getattr(self, 'type', 'Not available')}, Location: {self.location}, \n Dimensions: {self.dimensions}, Rotation Y: {self.rotation_y}, Score: {getattr(self, 'score', 'Not available')})"
 
 
 
@@ -145,7 +145,8 @@ class SensusInstance:
             loc = bbox[0:3]
             dim = bbox[3:6]
             rot = bbox[6]
-            self.camera_bboxes.append(CameraBbox(loc, dim, rot, score=score))
+            type = result3d.labels_3d[i].cpu().tolist()
+            self.camera_bboxes.append(CameraBbox(loc, dim, rot, score=score, type=type))
 
     def load_lidar_bboxes_from_result(self, result):
         result3d = result.pred_instances_3d
